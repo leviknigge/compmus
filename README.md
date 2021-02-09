@@ -10,3 +10,4 @@ The albums and singles are a good representation of the artists. They all use Sp
 Typical tracks for Vulfpeck are Cory Wong (yes that song is named after another artist in the list, it’s going to be confusing data!) or It Gets Funkier, the latter having the typical funk structure and interaction between instruments. An atypical song would be Theo Katzman’s As the Romans do. Whereas his solo music often has a halftime feel soulful style, this is an up-tempo track, more like what I would personally expect to come from Cory Wong’s repertoire. 
 
 It will be interesting to find out what makes each artists music truly theirs, even though they are so closely related and collaborative.
+"A line I wrote on my local computer" 
