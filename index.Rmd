@@ -9,100 +9,86 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Test
-
-```{r}
+```{r, include=FALSE}
 library(tidyverse)
 library(spotifyr)
+library(gridExtra)
+```
+
+# Introduction
+
+This portfolio explores the albums and singles of Vulfpeck and their members and closely associated acts Theo Katzmann and Woody Goss and collaborative acts Joey Dosik and Cory Wong. Vulfpeck’s Joe Dart is praised as one of the best bassists to emerge in recent years, but that’s not the only reason for this choice. Firstly, Vulfpeck is known for their one-take style of recording and off-beat musical style. Secondly, the band has a few closely associated members that appear on a large section of their music. Finally, the band’s members have their own solo projects which often still feature each other. This allows us to compare the albums of these artists and see what makes their music unique.
+
+The natural groups are the main artist on each album. Though they share a band there are some clear differences in genre, Vulfpeck is primarily funk, Theo Katzman is more slow love songs, Cory Wong has the danceability of pop music.
+
+The albums and singles are a good representation of the artists. They all use Spotify as their primary way of distribution and have at least an album each.
+
+Typical tracks for Vulfpeck are Cory Wong (yes that song is named after another artist in the list, it’s going to be confusing data!) or It Gets Funkier, the latter having the typical funk structure and interaction between instruments. An atypical song would be Theo Katzman’s As the Romans do. Whereas his solo music often has a halftime feel soulful style, this is an up-tempo track, more like what I would personally expect to come from Cory Wong’s repertoire. 
+
+It will be interesting to find out what makes each artists music truly theirs, even though they are so closely related and collaborative.
 
 
-seventies <- get_playlist_audio_features("", "67zYW4wCQezR6AH8EuNZ1Q")
-zeros <- get_playlist_audio_features("", "6dv5FbNRVlQelteqnNDFTe")
+====================
 
 
-decades <-
+\newpage
+
+# Data Exploration
+
+To start of, we load the playlists containing each artists albums into its own variable, and create a combined dataframe using category as the dividing variable between the different artists. Now we can begin making some exploratory plots.
+
+```{r}
+vulfpeck <- get_playlist_audio_features("", "3nI3zFZc0zNawgGGBvlLjd")
+woody <- get_playlist_audio_features("", "1YNoeB7YRKmwXDwxL6kXHv")
+corywong <- get_playlist_audio_features("", "6PTxkUtHVL2MVwBVw45HhC")
+katzman <- get_playlist_audio_features("", "26kcyNqQKAN3fnuO8NCL4B")
+
+# summary(vulfpeck)
+
+artists <-
   bind_rows(
-    seventies %>% mutate(category = "Seventies"),
-    zeros %>% mutate(category = "Zeros")
+    vulfpeck %>% mutate(category = "Vulfpeck"),
+    woody %>% mutate(category = "Woody"),
+    corywong %>% mutate(category = "Cory Wong"),
+    katzman %>% mutate(category = "Katzman")
   )
+```
 
-decades %>%                    # Start with awards.
+The first thing I was eager to find out is to see how accurate my own interpretation of each artists music was. One feature I could see making a clear division between artists was valence. I expected Cory Wong's music to be high in valence, because of it's positive and high energy feeling, Vulfpecks valence to be hard to grasp, and the same for Woody Goss. Their music has a very fun experimental quality but is modest in the musical expression of this enjoyment, it's not over the top happy-clappy music. Theo Katzman's music is more romantic, I would expect this to be an average valence, as it contains both the ups and downs of love.
+
+```{r}
+
+ggplot(artists, aes(valence, ..density.., color=category)) +
+  geom_histogram(bins=20, alpha=0.5) +
+  facet_wrap(~ category) +
+  theme(axis.text.y = element_blank())
+```
+To my surprise, Cory Wong was shown to be the most 'negative' out of all four artists. 
+
+
+To see where this difference is coming from I looked at some more low-level features such as tempo and mode. This plot gives a good interpretation of some of the differences between the artists.
+```{r}
+artists %>%                    # Start with awards.
   mutate(
     mode = ifelse(mode == 0, "Minor", "Major")
   ) %>%
   ggplot(                     # Set up the plot.
     aes(
-      x = valence,
-      y = energy,
-      size = loudness,
+      x = tempo,
+      y = danceability,
+#      size = liveness,
       colour = mode
     )
   ) +
-  geom_point() +              # Scatter plot.
-  geom_rug(size = 0.1) +      # Add 'fringes' to show data distribution.
-  facet_wrap(~category) +     # Separate charts per playlist.
-  scale_x_continuous(         # Fine-tune the x axis.
-    limits = c(0, 1),
-    breaks = c(0, 0.50, 1),   # Use grid-lines for quadrants only.
-    minor_breaks = NULL       # Remove 'minor' grid-lines.
-  ) +
-  scale_y_continuous(         # Fine-tune the y axis in the same way.
-    limits = c(0, 1),
-    breaks = c(0, 0.50, 1),
-    minor_breaks = NULL
-  ) +
+  geom_point(alpha = 0.5) +
+  facet_wrap(~category) +
   scale_colour_brewer(        # Use the Color Brewer to choose a palette.
     type = "qual",            # Qualitative set.
-    palette = "Paired"        # Name of the palette is 'Paired'.
-  ) +
-  scale_size_continuous(      # Fine-tune the sizes of each point.
-    trans = "exp",            # Use an exp transformation to emphasise loud.
-    guide = "none"            # Remove the legend for size.
-  ) +
-  theme_light() +             # Use a simpler theme.
+    palette = "Set1"        # Name of the palette is 'Paired'.
+  ) +             # Use a simpler theme.
   labs(                       # Make the titles nice.
-    x = "Valence",
-    y = "Energy",
-    colour = "Mode"
-  )
-
-decades %>%                    # Start with awards.
-  mutate(
-    mode = ifelse(mode == 0, "Minor", "Major")
-  ) %>%
-  ggplot(                     # Set up the plot.
-    aes(
-      x = danceability,
-      y = acousticness,
-      size = loudness,
-      colour = mode
-    )
-  ) +
-  geom_point() +              # Scatter plot.
-  geom_rug(size = 0.1) +      # Add 'fringes' to show data distribution.
-  facet_wrap(~category) +     # Separate charts per playlist.
-  scale_x_continuous(         # Fine-tune the x axis.
-    limits = c(0, 1),
-    breaks = c(0, 0.50, 1),   # Use grid-lines for quadrants only.
-    minor_breaks = NULL       # Remove 'minor' grid-lines.
-  ) +
-  scale_y_continuous(         # Fine-tune the y axis in the same way.
-    limits = c(0, 1),
-    breaks = c(0, 0.50, 1),
-    minor_breaks = NULL
-  ) +
-  scale_colour_brewer(        # Use the Color Brewer to choose a palette.
-    type = "qual",            # Qualitative set.
-    palette = "Paired"        # Name of the palette is 'Paired'.
-  ) +
-  scale_size_continuous(      # Fine-tune the sizes of each point.
-    trans = "exp",            # Use an exp transformation to emphasise loud.
-    guide = "none"            # Remove the legend for size.
-  ) +
-  theme_light() +             # Use a simpler theme.
-  labs(                       # Make the titles nice.
-    x = "Dancability",
-    y = "Acousticness",
+    x = "Tempo",
+    y = "Danceability",
     colour = "Mode"
   )
 ```
