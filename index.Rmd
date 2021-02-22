@@ -272,7 +272,7 @@ funky4 %>%
   labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
   theme_minimal() +
   scale_fill_viridis_c() +
-  xlim(10, 15)
+  xlim(10, 20)
 
 ```
 
@@ -367,6 +367,7 @@ grid.arrange(tl, tr, bl, br, ncol=2)
 
 
 ```
+
 *** 
   
 Description
