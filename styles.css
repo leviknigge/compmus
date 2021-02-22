@@ -1,0 +1,12 @@
+* {background-color: #9bbede;
+  font-family: 'Courier New', monospace;
+  color: white;
+}
+
+html {background-color: #9bbede;}
+
+body {background-color: #9bbede;}
+
+.center {
+  text-align: center;
+  padding: 50px 400px 100px 400px;

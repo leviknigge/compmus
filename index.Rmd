@@ -2,40 +2,63 @@
 title: "Vulfpeck"
 author: "Levi Knigge"
 date: "10-2-2021"
-output: html_document
+output: 
+  flexdashboard::flex_dashboard:
+    storyboard: true
+    theme: flatly
+    css: styles.css
+    orientation: rows
+    toc: true
+    toc_depth: 2
+    toc_float: true
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ```{r, include=FALSE}
 library(tidyverse)
 library(spotifyr)
 library(gridExtra)
+library(flexdashboard)
+library(readr)
+library(leaflet)
+library(DT)
+library(lubridate)
+library(plotly)
 ```
 
-# Introduction
+Introduction
+=========================================================================
 
+```{r, echo=FALSE}
+# Define variable containing url
+url <- "https://media.ticketmaster.com/tm/en-us/dam/a/b1f/f8c61ced-7670-4495-8a8f-15b66cf9db1f_247161_CUSTOM.jpg"
+```
+<center><img src="`r url`"></center>
+
+::: {.center data-latex=""}
 This portfolio explores the albums and singles of Vulfpeck and their members and closely associated acts Theo Katzmann and Woody Goss and collaborative acts Joey Dosik and Cory Wong. Vulfpeck’s Joe Dart is praised as one of the best bassists to emerge in recent years, but that’s not the only reason for this choice. Firstly, Vulfpeck is known for their one-take style of recording and off-beat musical style. Secondly, the band has a few closely associated members that appear on a large section of their music. Finally, the band’s members have their own solo projects which often still feature each other. This allows us to compare the albums of these artists and see what makes their music unique.
+
 
 The natural groups are the main artist on each album. Though they share a band there are some clear differences in genre, Vulfpeck is primarily funk, Theo Katzman is more slow love songs, Cory Wong has the danceability of pop music.
 
+
 The albums and singles are a good representation of the artists. They all use Spotify as their primary way of distribution and have at least an album each.
+
 
 Typical tracks for Vulfpeck are Cory Wong (yes that song is named after another artist in the list, it’s going to be confusing data!) or It Gets Funkier, the latter having the typical funk structure and interaction between instruments. An atypical song would be Theo Katzman’s As the Romans do. Whereas his solo music often has a halftime feel soulful style, this is an up-tempo track, more like what I would personally expect to come from Cory Wong’s repertoire. 
 
+
 It will be interesting to find out what makes each artists music truly theirs, even though they are so closely related and collaborative.
+:::
 
 
-====================
 
+Data Exploration
+=========================================================================
 
-\newpage
-
-# Data Exploration
-
-To start of, we load the playlists containing each artists albums into its own variable, and create a combined dataframe using category as the dividing variable between the different artists. Now we can begin making some exploratory plots.
 
 ```{r}
 vulfpeck <- get_playlist_audio_features("", "3nI3zFZc0zNawgGGBvlLjd")
@@ -56,19 +79,25 @@ artists <-
 
 The first thing I was eager to find out is to see how accurate my own interpretation of each artists music was. One feature I could see making a clear division between artists was valence. I expected Cory Wong's music to be high in valence, because of it's positive and high energy feeling, Vulfpecks valence to be hard to grasp, and the same for Woody Goss. Their music has a very fun experimental quality but is modest in the musical expression of this enjoyment, it's not over the top happy-clappy music. Theo Katzman's music is more romantic, I would expect this to be an average valence, as it contains both the ups and downs of love.
 
+Column { .tabset}
+--------------------------------------------------------
+### Distribution of Valence
 ```{r}
 
-ggplot(artists, aes(valence, ..density.., color=category)) +
+test <- ggplot(artists, aes(valence, ..density.., color=category)) +
   geom_histogram(bins=20, alpha=0.5) +
   facet_wrap(~ category) +
   theme(axis.text.y = element_blank())
+test
 ```
-To my surprise, Cory Wong was shown to be the most 'negative' out of all four artists. 
+> To my surprise, Cory Wong was shown to be the most 'negative' out of all four artists. 
 
 
-To see where this difference is coming from I looked at some more low-level features such as tempo and mode. This plot gives a good interpretation of some of the differences between the artists.
+
+
+### Tempo vs Dancability
 ```{r}
-artists %>%                    # Start with awards.
+advanced <- artists %>%                    # Start with awards.
   mutate(
     mode = ifelse(mode == 0, "Minor", "Major")
   ) %>%
@@ -91,4 +120,12 @@ artists %>%                    # Start with awards.
     y = "Danceability",
     colour = "Mode"
   )
+advanced
 ```
+
+
+> To see where this difference is coming from I looked at some more low-level features such as tempo and mode. This plot gives a good interpretation of some of the differences between the artists.
+
+
+
+*** To start of, we load the playlists containing each artists albums into its own variable, and create a combined dataframe using category as the dividing variable between the different artists. Now we can begin making some exploratory plots.
