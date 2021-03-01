@@ -1,0 +1,299 @@
+---
+title: "Vulfpeck"
+author: "Levi Knigge"
+date: "10-2-2021"
+output: 
+  flexdashboard::flex_dashboard:
+    storyboard: true
+    theme: flatly
+    css: styles.css
+    orientation: rows
+    toc: true
+    toc_depth: 2
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r, include=FALSE}
+library(tidyverse)
+library(spotifyr)
+library(gridExtra)
+library(flexdashboard)
+library(readr)
+library(leaflet)
+library(DT)
+library(lubridate)
+library(plotly)
+library(gridExtra)
+library(grid)
+library(ggplot2)
+library(lattice)
+library(compmus)
+library(cowplot)
+```
+
+```{r}
+vulfpeck <- get_playlist_audio_features("", "3nI3zFZc0zNawgGGBvlLjd")
+woody <- get_playlist_audio_features("", "1YNoeB7YRKmwXDwxL6kXHv")
+corywong <- get_playlist_audio_features("", "6PTxkUtHVL2MVwBVw45HhC")
+katzman <- get_playlist_audio_features("", "26kcyNqQKAN3fnuO8NCL4B")
+
+# summary(vulfpeck)
+
+artists <-
+  bind_rows(
+    vulfpeck %>% mutate(category = "Vulfpeck"),
+    woody %>% mutate(category = "Woody"),
+    corywong %>% mutate(category = "Cory Wong"),
+    katzman %>% mutate(category = "Katzman")
+  )
+```
+
+Cepstograms of Cory Wong (the song, not the artist)
+========================================================================
+
+Column {.sidebar}
+--------------------------------------------------------
+
+### Here we see the Cepstograms of Cory Wong by Vulfpeck (featuring Cory Wong)
+
+We learn more about the song every time we increase the resolution of the graph. You can clearly see the end of the song has high values for the third cepstral component, which corresponds to the outro which features a live audience cheering.
+
+Another striking part is the difference around the 100 second mark, before it the song has high values for cepstral features 2-4, while afterwards component 1 is the most prominent. The one thing that is clearly missing in the second part are high pitches on guitar. The bass and drums stop around the 90 second mark, but later return although less prominently.
+
+In the first part we also see interesting patterns arise in the more detailed resolutions. Closer investigation will be done to explain these.
+
+Column {}
+---------------------------------------------------
+
+```{r}
+corysong1 <-  get_tidy_audio_analysis("1L9qsoNnyT3r8fgr2Pr7Ty")%>% # Change URI.
+  compmus_align(sections, segments) %>%                     # Change `bars`
+  select(sections) %>%                                      #   in all three
+  unnest(sections) %>%                                      #   of these lines.
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  ) %>%
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  )
+
+corysong2 <-  get_tidy_audio_analysis("1L9qsoNnyT3r8fgr2Pr7Ty")%>% # Change URI.
+  compmus_align(bars, segments) %>%                     # Change `bars`
+  select(bars) %>%                                      #   in all three
+  unnest(bars) %>%                                      #   of these lines.
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  ) %>%
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  )
+
+corysong3 <-  get_tidy_audio_analysis("1L9qsoNnyT3r8fgr2Pr7Ty")%>% # Change URI.
+  compmus_align(beats, segments) %>%                     # Change `bars`
+  select(beats) %>%                                      #   in all three
+  unnest(beats) %>%                                      #   of these lines.
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  ) %>%
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  )
+
+corysong4 <-  get_tidy_audio_analysis("1L9qsoNnyT3r8fgr2Pr7Ty")%>% # Change URI.
+  compmus_align(tatums, segments) %>%                     # Change `bars`
+  select(tatums) %>%                                      #   in all three
+  unnest(tatums) %>%                                      #   of these lines.
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  ) %>%
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  )
+
+
+tl <- corysong1 %>%
+  compmus_gather_timbre() %>%
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = basis,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  scale_fill_viridis_c() +                              
+  theme_classic() + 
+  theme(legend.position = "none",
+        rect = element_rect(fill = "transparent"))
+
+tr <- corysong2 %>%
+  compmus_gather_timbre() %>%
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = basis,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  scale_fill_viridis_c() +                              
+  theme_classic() + 
+  theme(legend.position = "none",
+        rect = element_rect(fill = "transparent"))
+
+bl <- corysong3 %>%
+  compmus_gather_timbre() %>%
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = basis,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  scale_fill_viridis_c() +                              
+  theme_classic() +
+  theme(legend.position = "none",
+        rect = element_rect(fill = "transparent"))
+
+br <- corysong4 %>%
+  compmus_gather_timbre() %>%
+  ggplot(
+    aes(
+      x = start + duration / 2,
+      width = duration,
+      y = basis,
+      fill = value
+    )
+  ) +
+  geom_tile() +
+  labs(x = "Time (s)", y = NULL, fill = "Magnitude") +
+  scale_fill_viridis_c() +                              
+  theme_classic() + 
+  theme(legend.position = "none",
+        rect = element_rect(fill = "transparent"))
+
+grid.arrange(tl, tr, bl, br, ncol=2)
+
+
+
+```
+
+chroma vs timbre self similarity
+=========================================================================
+
+Column {.sidebar}
+--------------------------------------------------------
+
+### Here we see the Self Similarity Matrix for "Too hot in LA"
+
+We learn more about the song every time we increase the resolution of the graph. You can clearly see the end of the song has high values for the third cepstral component, which corresponds to the outro which features a live audience cheering.
+
+Another striking part is the difference around the 100 second mark, before it the song has high values for cepstral features 2-4, while afterwards component 1 is the most prominent. The one thing that is clearly missing in the second part are high pitches on guitar. The bass and drums stop around the 90 second mark, but later return although less prominently.
+
+In the first part we also see interesting patterns arise in the more detailed resolutions. Closer investigation will be done to explain these.
+
+Column {}
+---------------------------------------------------
+```{r, fig.width = 10, fig.height=10}
+
+#knitr::opts_chunk$set(fig.height = 9, fig.width = 7)
+
+#knitr::opts_chunk$set(out.height = "\\textheight",  out.width = "\\textwidth")
+
+toohot1 <-  get_tidy_audio_analysis("2IB1LWbNli57u0k7U1GAXt")%>% # Change URI.
+  compmus_align(bars, segments) %>%                     # Change `bars`
+  select(bars) %>%                                      #   in all three
+  unnest(bars) %>%                                      #   of these lines.
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  ) %>%
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "rms", norm = "euclidean"              # Change summary & norm.
+      )
+  )
+
+l <- toohot1 %>%
+  compmus_self_similarity(timbre, "angular") %>% 
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_fixed() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(x = "", y = "")
+
+r <- toohot1 %>%
+  compmus_self_similarity(pitches, "angular") %>% 
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_fixed() +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(x = "", y = "")
+grid.arrange(l,r, ncol=2)
+```
