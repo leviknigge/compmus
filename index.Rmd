@@ -187,7 +187,7 @@ twenty_five %>%
 ```
 
 
-Cory Wong Chordogram (the artist)
+Cory Wong Chordogram
 =======================================================================
 
 
@@ -201,7 +201,7 @@ Cory wong's golden is very uptempo song, which is not something very typical for
 Column {}
 ---------------------------------------------------
 ```{r}
-corygolden <-
+cory_golden <-
   get_tidy_audio_analysis("7wjmwD5nIYWVnHiR3X3PTO") %>%
   compmus_align(bars, segments) %>%
   select(bars) %>%
@@ -232,7 +232,7 @@ cory_golden %>%
 ```
 
 
-Cepstograms of Cory Wong (the song, not the artist)
+Cepstograms of Cory Wong 
 ========================================================================
 
 Column {.sidebar}
@@ -401,7 +401,7 @@ grid.arrange(tl, tr, bl, br, ncol=2)
 
 ```
 
-chroma vs timbre self similarity
+chroma vs timbre ssm
 =========================================================================
 
 Column {.sidebar}
