@@ -13,7 +13,7 @@ output:
     toc_float: true
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, cache = TRUE}
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
@@ -41,6 +41,7 @@ vulfpeck <- get_playlist_audio_features("", "3nI3zFZc0zNawgGGBvlLjd")
 woody <- get_playlist_audio_features("", "1YNoeB7YRKmwXDwxL6kXHv")
 corywong <- get_playlist_audio_features("", "6PTxkUtHVL2MVwBVw45HhC")
 katzman <- get_playlist_audio_features("", "26kcyNqQKAN3fnuO8NCL4B")
+fearless <- get_playlist_audio_features("", "67Zq8kPS6CmIcBZYEIy5JL")
 
 # summary(vulfpeck)
 
@@ -49,7 +50,8 @@ artists <-
     vulfpeck %>% mutate(category = "Vulfpeck"),
     woody %>% mutate(category = "Woody"),
     corywong %>% mutate(category = "Cory Wong"),
-    katzman %>% mutate(category = "Katzman")
+    katzman %>% mutate(category = "Katzman"),
+    fearless %>% mutate(category= "Fearless")
   )
 ```
 
@@ -140,21 +142,123 @@ key_templates <-
     "D#:min", circshift(minor_key, 3)
   )
 ```
-
-Theo Katzman's chords
+Tempo {.storyboard}
 ========================================================================
 
+### Nate Smith's Get Down
 
-Column {.sidebar}
---------------------------------------------------------
+```{r, cache=TRUE}
+get_down <- get_tidy_audio_analysis("6bZ68VCNVyuKyE534TcmsW")
+adrienne <- get_tidy_audio_analysis("66xEqq3jsr3p52uOhGM5Nm")
+five <- get_tidy_audio_analysis("5T5W7UzmLJljQUIJ7FxotZ")
+paved <- get_tidy_audio_analysis("3NxejBP3DtRZ55y2MQHShk")
 
-### You could be president by Theo Katzman   
+# spotify:track:3NxejBP3DtRZ55y2MQHShk - paved
+#spotify:track:5T5W7UzmLJljQUIJ7FxotZ - big/little five
+# spotify:track:66xEqq3jsr3p52uOhGM5Nm - adrienne
+
+get_down %>%
+  tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) %>%
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +
+  labs(x = "Time (s)", y = "Tempo (BPM)") +
+  theme_classic()
 
 
-Here we see the chordogram for "You could be president" by Theo Katzman. A typical song in his style. It has a halftime beat and vocals, a repeating guitar riff as a melody and a more uptempo chorus. It also has a typical piano and guitar solo at 135 seconds. We can see clearly he sticks to the E flat 7 chord that the song is built on througout the entire song.
 
-Column {}
----------------------------------------------------
+
+```
+
+***
+
+A tempogram of Nate Smith's shows his impeccable timing and ability to play with tempo.
+
+### Nate Smith playing with time
+
+
+```{r}
+five %>%
+  tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) %>%
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +
+  labs(x = "Time (s)", y = "Tempo (BPM)") +
+  theme_classic()
+
+paved %>%
+  tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) %>%
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +
+  labs(x = "Time (s)", y = "Tempo (BPM)") +
+  theme_classic()
+```
+
+***
+
+Nate Smith's incredible drumming
+
+Nate Smith is a legendary drummer, and one of his strengths is his impeccable timing. As you can see in these plots the tempo of the song is straight as an arrow. As for Big/small Five, the song is in 5/4, but one of Nate Smith's signature moves is playing a 4 beat rythm over 5/4 and keeping the timing perfect. Being used to western music you expect the song to change in an even number of measures, but because the song is in 5/4 and the change in the song happens after 7 measures you are completely blindsided. Not only does it not line up with the 4/4, but even in 5/4 the change seems one measure early.
+
+You can also clearly see spotify struggles with his playing different feeling rythms over the same tempo. In the end of "paved" you can clearly see he slows down as a means to end the song.
+
+### Adrienne & Adrianne
+
+
+```{r}
+adrienne %>%
+  tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) %>%
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +
+  labs(x = "Time (s)", y = "Tempo (BPM)") +
+  theme_classic()
+```
+
+***
+
+Vulfpeck and Fearless flyer's adrienne
+
+There seem to be two rythms in this song. This is most likely caused by the clear 4/4 feel of the drums in comparison with the offset melody. The melody of the chorus starts on the off-beat of the first beat of the bar of the drums. The melody covers 2 and a half bars, resulting in a sort of 5/8 feel to the song. Due to the fact that the chorus ends on a rest that goes over the first beat of the verse this doesn't make either tempo stand out as more likely.
+
+
+<!-- Test -->
+<!-- ======================================================================= -->
+
+
+<!-- Column {.sidebar} -->
+<!-- -------------------------------------------------------- -->
+
+<!-- ### Testing -->
+
+<!-- testing -->
+
+<!-- Column {} -->
+<!-- ------------------------------------------------------- -->
+
+<!-- ```{r} -->
+<!-- get_down_2 <- -->
+<!--   get_tidy_audio_analysis("6bZ68VCNVyuKyE534TcmsW") %>% -->
+<!--   select(segments) %>% -->
+<!--   unnest -->
+
+<!-- get_down_2 %>% -->
+<!--   mutate(loudness_max_time = start + loudness_max_time) %>% -->
+<!--   arrange(loudness_max_time) %>% -->
+<!--   mutate(delta_loudness = loudness_max - lag(loudness_max)) %>% -->
+<!--   ggplot(aes(x = loudness_max_time, y = pmax(0, delta_loudness))) + -->
+<!--   geom_line() + -->
+<!--   xlim(0, 30) + -->
+<!--   theme_minimal() + -->
+<!--   labs(x = "Time (s)", y = "Novelty") -->
+<!-- ``` -->
+
+Chords and Keys{.storyboard}
+=======================================================================
+
+### Theo Katzman's chords- You could be president by Theo Katzman   
+
 ```{r}
 twenty_five <-
   get_tidy_audio_analysis("1aEcZKCwqln3s3VvY5Kwxl") %>%
@@ -186,20 +290,13 @@ twenty_five %>%
   labs(x = "Time (s)", y = "")
 ```
 
+***
 
-Cory Wong Chordogram
-=======================================================================
+Here we see the chordogram for "You could be president" by Theo Katzman. A typical song in his style. It has a halftime beat and vocals, a repeating guitar riff as a melody and a more uptempo chorus. It also has a typical piano and guitar solo at 135 seconds. We can see clearly he sticks to the E flat 7 chord that the song is built on througout the entire song.
+
+### Cory Wong Chordogram - Golden
 
 
-Column {.sidebar}
---------------------------------------------------------
-
-### Cory Wong's Golden
-
-Cory wong's golden is very uptempo song, which is not something very typical for him. The song also features a vocal performance that is similar to a pop song. Coincidentally this song also sticks to E flat 7 as a main chord, but you can see this is not the only chord used. This is probably because of the harmonies between different instruments in this song.
-
-Column {}
----------------------------------------------------
 ```{r}
 cory_golden <-
   get_tidy_audio_analysis("7wjmwD5nIYWVnHiR3X3PTO") %>%
@@ -231,23 +328,15 @@ cory_golden %>%
   labs(x = "Time (s)", y = "")
 ```
 
+***
 
-Cepstograms of Cory Wong 
-========================================================================
+Cory wong's golden is very uptempo song, which is not something very typical for him. The song also features a vocal performance that is similar to a pop song. Coincidentally this song also sticks to E flat 7 as a main chord, but you can see this is not the only chord used. This is probably because of the harmonies between different instruments in this song.
 
-Column {.sidebar}
---------------------------------------------------------
 
-### Here we see the Cepstograms of Cory Wong by Vulfpeck (featuring Cory Wong)
+Chromatic and Cepstral Analysis {.storyboard}
+=======================================================================
 
-We learn more about the song every time we increase the resolution of the graph. You can clearly see the end of the song has high values for the third cepstral component, which corresponds to the outro which features a live audience cheering.
-
-Another striking part is the difference around the 100 second mark, before it the song has high values for cepstral features 2-4, while afterwards component 1 is the most prominent. The one thing that is clearly missing in the second part are high pitches on guitar. The bass and drums stop around the 90 second mark, but later return although less prominently.
-
-In the first part we also see interesting patterns arise in the more detailed resolutions. Closer investigation will be done to explain these.
-
-Column {}
----------------------------------------------------
+### Cepstograms of Cory Wong by Vulfpeck (featuring Cory Wong)
 
 ```{r, fig.width = 16, fig.height=9}
 corysong1 <-  get_tidy_audio_analysis("1L9qsoNnyT3r8fgr2Pr7Ty")%>% # Change URI.
@@ -401,18 +490,16 @@ grid.arrange(tl, tr, bl, br, ncol=2)
 
 ```
 
-chroma vs timbre ssm
-=========================================================================
+***
 
-Column {.sidebar}
---------------------------------------------------------
+We learn more about the song every time we increase the resolution of the graph. You can clearly see the end of the song has high values for the third cepstral component, which corresponds to the outro which features a live audience cheering.
+
+Another striking part is the difference around the 100 second mark, before it the song has high values for cepstral features 2-4, while afterwards component 1 is the most prominent. The one thing that is clearly missing in the second part are high pitches on guitar. The bass and drums stop around the 90 second mark, but later return although less prominently.
+
+In the first part we also see interesting patterns arise in the more detailed resolutions. Closer investigation will be done to explain these.
 
 ### Here we see the Self Similarity Matrix for "Too hot in LA"
 
-When analyzing the structure of the self similarity matrix for timbre(left) and pitch(right) there are some clear structures. The song has a clear pre-chorus and chorus. What is interesting is that the most prominent yellow pitch lines are only for the prechorus, meaning the chorus and verse are very similar in pitch. The main melody is provided by the bass, and indeed the bass part is the same for the chorus and verses, and different for the prechorus.    
-
-Column {}
----------------------------------------------------
 ```{r, fig.width = 12, fig.height=6}
 
 #knitr::opts_chunk$set(fig.height = 9, fig.width = 7)
@@ -474,6 +561,9 @@ r <- toohot1 %>%
 grid.arrange(l,r, ncol=2)
 ```
 
+***
+
+When analyzing the structure of the self similarity matrix for timbre(left) and pitch(right) there are some clear structures. The song has a clear pre-chorus and chorus. What is interesting is that the most prominent yellow pitch lines are only for the prechorus, meaning the chorus and verse are very similar in pitch. The main melody is provided by the bass, and indeed the bass part is the same for the chorus and verses, and different for the prechorus.    
 
 
 Introduction

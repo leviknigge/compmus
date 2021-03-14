@@ -1,15 +1,48 @@
 ---
-title: "test"
+title: "Vulfpeck"
 author: "Levi Knigge"
-date: "15-2-2021"
-output: html_document
+date: "10-2-2021"
+output: 
+  flexdashboard::flex_dashboard:
+    storyboard: true
+    theme: flatly
+    css: styles.css
+    orientation: rows
+    toc: true
+    toc_depth: 2
+    toc_float: true
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include=FALSE, cache = TRUE}
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
-## R Markdown
+```{r, include=FALSE}
+library(tibble)
+library(tidyverse)
+library(spotifyr)
+library(gridExtra)
+library(flexdashboard)
+library(readr)
+library(leaflet)
+library(DT)
+library(lubridate)
+library(plotly)
+library(gridExtra)
+library(grid)
+library(ggplot2)
+library(lattice)
+library(compmus)
+
+```
+
+Tempo
+
+
+Test {.storyboard}
+==============================
+
+### R Markdown
 
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
@@ -107,9 +140,14 @@ decades %>%                    # Start with awards.
     y = "Acousticness",
     colour = "Mode"
   )
-``````
+```
 
-## Including Plots
+***
+
+some typa discription or som
+
+### Including Plots
+
 
 You can also embed plots, for example:
 
@@ -118,3 +156,7 @@ plot(pressure)
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+***   
+
+some other typa sidebar maybe
