@@ -38,21 +38,28 @@ library(compmus)
 
 ```{r}
 vulfpeck <- get_playlist_audio_features("", "3nI3zFZc0zNawgGGBvlLjd")
-woody <- get_playlist_audio_features("", "1YNoeB7YRKmwXDwxL6kXHv")
-corywong <- get_playlist_audio_features("", "6PTxkUtHVL2MVwBVw45HhC")
+corywong <- get_playlist_audio_features("", "63WEX3nqvVWQM08k4GOdpY")
 katzman <- get_playlist_audio_features("", "26kcyNqQKAN3fnuO8NCL4B")
 fearless <- get_playlist_audio_features("", "67Zq8kPS6CmIcBZYEIy5JL")
+nate <- get_playlist_audio_features("", "3PcaerIEOjHbo56TmnR62I")
+nate <- nate[!is.na(nate$playlist_id),]
+woody <- get_playlist_audio_features("", "1YNoeB7YRKmwXDwxL6kXHv")
+
 
 # summary(vulfpeck)
 
 artists <-
   bind_rows(
     vulfpeck %>% mutate(category = "Vulfpeck"),
-    woody %>% mutate(category = "Woody"),
     corywong %>% mutate(category = "Cory Wong"),
     katzman %>% mutate(category = "Katzman"),
-    fearless %>% mutate(category= "Fearless")
+    fearless %>% mutate(category= "Fearless"),
+    woody %>% mutate(category = "Woody"),
+    nate %>% mutate(category = "Nate")
   )
+
+artists <- artists %>% mutate(artist_track = paste(category, track.name))
+
 ```
 
 ```{r cars}
@@ -142,8 +149,306 @@ key_templates <-
     "D#:min", circshift(minor_key, 3)
   )
 ```
+
+Predicting {.storyboard}
+========================================================================
+
+### TESTING
+```{r, results = 'hide'}
+library(tidyverse)
+library(tidymodels)
+library(ggdendro)
+library(heatmaply)
+library(spotifyr)
+library(compmus)
+
+get_conf_mat <- function(fit) {
+  outcome <- .get_tune_outcome_names(fit)
+  fit %>% 
+    collect_predictions() %>% 
+    conf_mat(truth = outcome, estimate = .pred_class)
+}  
+
+get_pr <- function(fit) {
+  fit %>% 
+    conf_mat_resampled() %>% 
+    group_by(Prediction) %>% mutate(precision = Freq / sum(Freq)) %>% 
+    group_by(Truth) %>% mutate(recall = Freq / sum(Freq)) %>% 
+    ungroup() %>% filter(Prediction == Truth) %>% 
+    select(class = Prediction, precision, recall)
+}  
+
+vulf_features <-
+  artists %>%  # For your portfolio, change this to the name of your corpus.
+  add_audio_analysis() %>% 
+  mutate(
+    category = factor(category),
+    segments = map2(segments, key, compmus_c_transpose),
+    pitches =
+      map(
+        segments,
+        compmus_summarise, pitches,
+        method = "mean", norm = "manhattan"
+      ),
+    timbre =
+      map(
+        segments,
+        compmus_summarise, timbre,
+        method = "mean",
+      )
+  ) %>%
+  mutate(pitches = map(pitches, compmus_normalise, "clr")) %>%
+  mutate_at(vars(pitches, timbre), map, bind_rows) %>%
+  unnest(cols = c(pitches, timbre))
+
+```
+```{r}
+vulf_recipe <-
+  recipe(
+    category ~
+      danceability +
+      energy +
+      loudness +
+      speechiness +
+      acousticness +
+      instrumentalness +
+      liveness +
+      valence +
+      tempo +
+      duration +
+      C + `C#|Db` + D + `D#|Eb` +
+      E + `F` + `F#|Gb` + G +
+      `G#|Ab` + A + `A#|Bb` + B +
+      c01 + c02 + c03 + c04 + c05 + c06 +
+      c07 + c08 + c09 + c10 + c11 + c12,
+    data = vulf_features,          # Use the same name as the previous block.
+  ) %>%
+  step_center(all_predictors()) %>%
+  step_scale(all_predictors())      # Converts to z-scores.
+  # step_range(all_predictors())    # Sets range to [0, 1].
+
+vulf_recipe2 <-
+  recipe(
+    category ~
+      energy +
+      loudness +
+      speechiness +
+      acousticness +
+      instrumentalness +
+      c01 + c02 + c03 + c04 + c05 + c06 +
+      c07 + c11,
+    data = vulf_features,          # Use the same name as the previous block.
+  ) %>%
+  step_center(all_predictors()) %>%
+  step_scale(all_predictors())      # Converts to z-scores.
+  # step_range(all_predictors())    # Sets range to [0, 1].
+```
+```{r}
+vulf_cv <- vulf_features %>% vfold_cv(5)
+```
+```{r}
+knn_model <-
+  nearest_neighbor(neighbors = 1) %>%
+  set_mode("classification") %>% 
+  set_engine("kknn")
+vulf_knn <- 
+  workflow() %>% 
+  add_recipe(vulf_recipe2) %>% 
+  add_model(knn_model) %>% 
+  fit_resamples(
+    vulf_cv, 
+    control = control_resamples(save_pred = TRUE)
+  )
+```
+```{r}
+vulf_knn %>% get_conf_mat()
+```
+```{r}
+#vulf_knn %>% get_conf_mat() %>% autoplot(type = "mosaic")
+```
+```{r}
+vulf_knn %>% get_conf_mat() %>% autoplot(type = "heatmap")
+```
+```{r}
+#vulf_knn %>% get_pr()
+```
+
+***
+
+When constructing the KNN network one thing that drastically improved performance is using only the top 10 most influential features. Still there are some interesting observations to be made. Although this confusion matrix gives some insight, it is skewed towards the bigger categories like Vulfpeck and Cory wong, and it only shows numbers, and not a clear measure of performance.
+
+### Detailed analysis of performance
+
+```{r}
+forest_model <-
+  rand_forest() %>%
+  set_mode("classification") %>% 
+  set_engine("ranger", importance = "impurity")
+vulf_forest <- 
+  workflow() %>% 
+  add_recipe(vulf_recipe2) %>% 
+  add_model(forest_model) %>% 
+  fit_resamples(
+    vulf_cv, 
+    control = control_resamples(save_pred = TRUE)
+  )
+
+
+```
+```{r}
+vulf_forest %>% get_conf_mat() %>% autoplot(type = "heatmap")
+```
+```{r}
+vulf_forest %>% get_pr()
+```
+***
+
+We can see here that Fearless Flyers is clearly the most distinctive category. We can also se
+
+### Importance of features
+
+```{r}
+workflow() %>% 
+  add_recipe(vulf_recipe) %>% 
+  add_model(forest_model) %>% 
+  fit(vulf_features) %>% 
+  pluck("fit", "fit", "fit") %>%
+  ranger::importance() %>% 
+  enframe() %>% 
+  mutate(name = fct_reorder(name, value)) %>% 
+  ggplot(aes(name, value)) + 
+  geom_col() + 
+  coord_flip() +
+  theme_minimal() +
+  labs(x = NULL, y = "Importance")
+```
+
+***
+
+This shows the most important distinguishing features between the different playlists.
+
+### Clustering
+
+```{r}
+clustering <-
+  artists %>%
+  add_audio_analysis() %>%
+  mutate(
+    segments = map2(segments, key, compmus_c_transpose),
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "mean", norm = "manhattan"
+      ),
+    timbre =
+      map(
+        segments,
+        compmus_summarise, timbre,
+        method = "mean"
+      )
+  ) %>%
+  mutate(pitches = map(pitches, compmus_normalise, "clr")) %>%
+  mutate_at(vars(pitches, timbre), map, bind_rows) %>%
+  unnest(cols = c(pitches, timbre))
+```
+```{r}
+cluster_juice <-
+  recipe(
+    artist_track ~
+      danceability +
+      energy +
+      loudness +
+      speechiness +
+      acousticness +
+      instrumentalness +
+      liveness +
+      valence +
+      tempo +
+      duration +
+      C + `C#|Db` + D + `D#|Eb` +
+      E + `F` + `F#|Gb` + G +
+      `G#|Ab` + A + `A#|Bb` + B +
+      c01 + c02 + c03 + c04 + c05 + c06 +
+      c07 + c08 + c09 + c10 + c11 + c12,
+    data = clustering
+  ) %>%
+  step_center(all_predictors()) %>%
+  step_scale(all_predictors()) %>% 
+#  step_range(all_predictors()) %>% 
+  prep(clustering %>% mutate(artist_track = str_trunc(artist_track, 60))) %>%
+  juice() %>%
+  column_to_rownames("artist_track")
+
+library(rpart)
+library(factoextra)
+
+# vulf_means = kmeans(cluster_juice, 6, iter.max = 100, nstart = 25)
+
+#km.res <- kmeans(iris.scaled, 3, nstart = 10)
+
+# Visualize kmeans clustering
+# use repel = TRUE to avoid overplotting
+
+
+res.km <- eclust(cluster_juice, k=6, "kmeans", nstart = 25, graph=FALSE)
+
+fviz_cluster(res.km, clutser_juice, ellipse.type = "norm",  repel=TRUE, labelsize = 9, , ellipse.level=.7)
+
+```
+
+***
+
+Here we try clustering in the 6 categories we defined at the beginning of this portfolio. As you can see the groups are certainly not pure. I will add more insightful analysis of the clusters later.
+
 Tempo {.storyboard}
 ========================================================================
+
+### TESTING
+
+```{r}
+
+hist1 <- ggplot(data = artists, mapping = aes(x = tempo)) + 
+  geom_histogram(aes(fill = category)) +
+  theme_light() +
+  ggtitle("Tempos") +
+  theme(legend.position="none")
+
+hist1
+
+hist3 <- ggplot(data = artists, mapping = aes(x = tempo, y = category, fill = category)) + 
+  geom_violin(scale = "area", width=1, trim=FALSE, adjust = .25) +
+#  geom_density(adjust=0.2) +
+#  facet_wrap(~ category) +
+#  geom_jitter(height = 0.1, width = 0) +
+#  geom_boxplot(width=0.1, color="white") +
+  stat_summary(fun.x=median, geom="point", size=2, color="red") +
+  scale_x_continuous() +
+  theme_light() +
+  ggtitle("Tempo")
+
+hist3
+
+# test1 <- artists %>%
+#   mutate(trends = ifelse(trend == "dance", "dance", "other")) %>%
+#   filter(trends == "dance")%>%
+#     count(key_name) %>%
+#       mutate(perc = n/sum(n), trends = "dance")
+#   
+# other_counts <- corpus %>%
+#   mutate(trends = ifelse(trend == "dance", "dance", "other")) %>%
+#   filter(trends == "other")%>%
+#     count(key_name) %>%
+#       mutate(perc = n/sum(n), trends = "other")
+
+# rbind(dance_counts, other_counts) %>%
+#   ggplot(aes(x = key_name, y = perc)) +
+#     geom_bar(stat = "identity", fill = "skyblue") + 
+#       facet_wrap(~trends)+
+#         labs(title = "Distribution of keys in the corpus",
+#              x = "Key",
+#              y = "Normalised Frequency")
+```
+
 
 ### Nate Smith's Get Down
 
