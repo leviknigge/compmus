@@ -303,7 +303,7 @@ vulf_forest %>% get_pr()
 ```
 ***
 
-We can see here that Fearless Flyers is clearly the most distinctive category. We can also se
+As with the KNN network we see in this Random Forest implementation the Fearless Flyers playlist is the most distinctive group in the corpus. 
 
 ### Importance of features
 
@@ -325,7 +325,7 @@ workflow() %>%
 
 ***
 
-This shows the most important distinguishing features between the different playlists.
+This shows the most important distinguishing features between the different playlists. Loudness seems to be the key distinguishing feature, followed by instrumentalness and energy. The rest of the top 10 is mainly timbre components, while the key of the song doesn't seem to contribute all that much to the predictions.
 
 ### Clustering
 
@@ -398,7 +398,22 @@ fviz_cluster(res.km, clutser_juice, ellipse.type = "norm",  repel=TRUE, labelsiz
 
 ***
 
-Here we try clustering in the 6 categories we defined at the beginning of this portfolio. As you can see the groups are certainly not pure. I will add more insightful analysis of the clusters later.
+Here we try clustering in the 6 categories we defined at the beginning of this portfolio. As you can see the groups are certainly not pure. Nate smith seems to concentrate in the upper right, but is also in the lower clusters. I will analyse the exact classifications more precisely in the final portfolio.
+
+### Principal Components
+
+```{r}
+library(FactoMineR)
+pca <- PCA(cluster_juice, ncp=6, scale.unit = TRUE, graph=FALSE)
+#get_eigenvalue(pca)
+#fviz_eig(pca, addlabels=TRUE)
+#pcavar <- get_pca_var(pca)
+fviz_pca_var(pca, col.var="cos2", alpha.var="contrib", gradient.cols = c("blue", "green", "red"), repel = TRUE)
+```
+
+***
+
+In the previous slide we were shown the 6 clusters our random forest came up with. This is represented in our graph along two dimensions. In machine learning Principal Component Analysis is used to determine a linear combination of the features in our dataset that offer the highest rate of variability. In this circle we see the same two dimensions, but now plotted on top is the contribution of each of our features, the ones we know how to interpret. We can see that acousticness and energy are the biggest contributours for dimension 1, while c01 plays the largest role in dimension two. 
 
 Tempo {.storyboard}
 ========================================================================
