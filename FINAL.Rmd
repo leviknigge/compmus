@@ -393,6 +393,7 @@ artists %>%
     aes(
       x = key_name,
       y = stat(count),
+      label = key_name,
       fill = mode_name
     )
   ) +
@@ -583,7 +584,7 @@ r <- toohot1 %>%
         plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#9bbede"), legend.background = element_rect(fill="#9bbede"),
         strip.background = element_blank()) +
   labs(x ="", y="", title="Pitch")
-lol <- grid.arrange(l,r, ncol=2)
+lol <- arrangeGrob(l,r, ncol=2)
 
 # final touch
 cowplot::ggdraw(lol) + 
@@ -710,7 +711,7 @@ r <- toohot1 %>%
         plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#9bbede"), legend.background = element_rect(fill="#9bbede"),
         strip.background = element_blank()) +
   labs(x = "", y = "",title="Pitch")
-lol <- grid.arrange(l,r, ncol=2)
+lol <- arrangeGrob(l,r, ncol=2)
 
 # final touch
 cowplot::ggdraw(lol) + 
@@ -838,7 +839,7 @@ r <- toohot1 %>%
         plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#9bbede"), legend.background = element_rect(fill="#9bbede"),
         strip.background = element_blank()) +
   labs(x = "", y = "",title="Pitch")
-lol <- grid.arrange(l,r, ncol=2)
+lol <- arrangeGrob(l,r, ncol=2)
 
 # final touch
 cowplot::ggdraw(lol) + 
@@ -960,7 +961,7 @@ r <- toohot1 %>%
         plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#9bbede"), legend.background = element_rect(fill="#9bbede"),
         strip.background = element_blank()) +
   labs(x = "", y = "", title="Pitch")
-lol <- grid.arrange(l,r, ncol=2)
+lol <- arrangeGrob(l,r, ncol=2)
 
 # final touch
 cowplot::ggdraw(lol) + 
@@ -1086,7 +1087,7 @@ r <- toohot1 %>%
         plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#9bbede"), legend.background = element_rect(fill="#9bbede"),
         strip.background = element_blank()) +
   labs(x = "", y = "", title="Pitch")
-lol <- grid.arrange(l,r, ncol=2)
+lol <- arrangeGrob(l,r, ncol=2)
 
 # final touch
 cowplot::ggdraw(lol) + 
@@ -1202,7 +1203,7 @@ theme_classic() +
         plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#9bbede"), legend.background = element_rect(fill="#9bbede"),
         strip.background = element_blank()) +
   labs(x = "", y = "", title="Pitch")
-lol <- grid.arrange(l,r, ncol=2)
+lol <- arrangeGrob(l,r, ncol=2)
 
 # final touch
 cowplot::ggdraw(lol) + 
@@ -1225,10 +1226,11 @@ The timbre features again give little insight. The final part features a trumpet
 
 The strange checkerboard pattern that can be seen twice in is caused by the way the melody is built. It is an interplay between a bass on the down-beat and a high guitar chord on the up-beat. The final part is a repetitive vocal melody made to sing along.
 
-Predicting {.storyboard}
+Predicting Artist {.storyboard}
 ========================================================================
 
 ### Lets put this to the test, we certainly found some differences, but are they distinctive enough?
+
 ```{r predicting , results = 'hide'}
 
 
@@ -1331,82 +1333,17 @@ vulf_knn <-
   )
 ```
 ```{r}
-vulf_knn %>% get_conf_mat()
+#vulf_knn %>% get_conf_mat()
 ```
 ```{r}
 #vulf_knn %>% get_conf_mat() %>% autoplot(type = "mosaic")
 ```
 ```{r}
-vulf_knn %>% get_conf_mat() %>% autoplot(type = "heatmap")
+#vulf_knn %>% get_conf_mat() %>% autoplot(type = "heatmap")
 ```
 ```{r}
 #vulf_knn %>% get_pr()
 ```
-
-*** 
-
-When constructing the KNN network one thing that drastically improved performance is using only the top 10 most influential features. Still there are some interesting observations to be made. Although this confusion matrix gives some insight, it is skewed towards the bigger categories like Vulfpeck and Cory wong, and it only shows numbers, and not a clear measure of performance.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-
-.
-
-.
-
-.
-
-.
-
-.
-
-
-### Detailed analysis of performance
 
 ```{r}
 forest_model <-
@@ -1425,58 +1362,31 @@ vulf_forest <-
 
 ```
 ```{r}
-vulf_forest %>% get_conf_mat() %>% autoplot(type = "heatmap")
+vulf_forest %>% get_conf_mat() %>% autoplot(type = "heatmap") + theme_classic() +
+  theme(legend.position="none", axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1),
+        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#FCF6F5FF")) +
+  labs(x = "Truth", y = "Prediction", title="Pitch")
+
+jaap <- vulf_forest %>% get_conf_mat()
+
 ```
+```{r}
+#vulf_forest %>% get_pr()
+```
+*** 
+
+To get the best classifier I tried both KNN and Random Forest to see which could achieve the best performance. Although the KNN was surprisingly effective, the random forest classifier did achieve the best
+
 ```{r}
 vulf_forest %>% get_pr()
 ```
-***
-
-As with the KNN network we see in this Random Forest implementation the Fearless Flyers playlist is the most distinctive group in the corpus. 
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
 
 
-.
+When constructing the network one thing that drastically improved performance is using only the top 10 most influential features. Still there are some interesting observations to be made. Although this confusion matrix gives some insight, it is skewed towards the bigger categories like Vulfpeck and Cory wong, and it only shows numbers, and not a clear measure of performance. An analysis of the top features can be seen on the following page.
 
-.
+We can see that at least every category is the most predicted for each truth value. The Precision is especially high for Nate Smith and The Fearless Flyers. This likely because Nate Smith's music is so drum heavy, and the Fearles Flyers music is guitar heavy. However, this precision comes at a price for Nate Smith, because the recall is low.
 
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
+Woody Goss is the hardest predict, but there is a reasonable explanation for this. One of his albums is compilation of christmas covers of existing Vulfpeck songs. This means that these might not differ that much in pitch class, and since the Vulfpeck category is three times as large as Woody Goss' category, it's more efficient for the network to predict Vulfpeck.
 
 .
 
@@ -1494,7 +1404,7 @@ As with the KNN network we see in this Random Forest implementation the Fearless
 
 ### Importance of features
 
-```{r}
+```{r, fig.height=8, fig.width=8}
 workflow() %>% 
   add_recipe(vulf_recipe) %>% 
   add_model(forest_model) %>% 
@@ -1503,11 +1413,17 @@ workflow() %>%
   ranger::importance() %>% 
   enframe() %>% 
   mutate(name = fct_reorder(name, value)) %>% 
-  ggplot(aes(name, value)) + 
-  geom_col() + 
+  ggplot(aes(name, value, label=paste(name,"-",round(value, digits=2)))) + 
+  geom_col(fill="#ef3b19") + 
+  geom_text(color="#FCF6F5FF", size = 3.5, vjust=.5, hjust=1) +
   coord_flip() +
-  theme_minimal() +
-  labs(x = NULL, y = "Importance")
+theme_classic() +
+  theme(axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#FCF6F5FF"), legend.background = element_rect(fill="#9bbede"),
+        strip.background = element_blank()) +  labs(x = NULL, y = "Importance") +
+  labs(title="Importance")
 ```
 
 ***
@@ -1558,21 +1474,8 @@ This shows the most important distinguishing features between the different play
 
 .
 
-.
 
-
-.
-
-.
-
-.
-
-.
-
-.
-
-
-### Clustering
+### Clustering into 6 groups
 
 ```{r}
 clustering <-
@@ -1637,9 +1540,22 @@ library(factoextra)
 
 res.km <- eclust(cluster_juice, k=6, "kmeans", nstart = 25, graph=FALSE)
 
-fviz_cluster(res.km, clutser_juice, ellipse.type = "norm",  repel=TRUE, labelsize = 9, , ellipse.level=.7)
+fviz_cluster(res.km, clutser_juice, ellipse.type = "norm",  repel=TRUE, labelsize = 9, , ellipse.level=.7) +
+  theme_classic() +
+  theme(axis.text.x=element_blank(),axis.ticks.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#FCF6F5FF"), legend.background = element_rect(fill="#9bbede"),
+        strip.background = element_blank()) 
 
 ```
+
+***
+
+Here we try clustering in the 6 categories we defined at the beginning of this portfolio. As you can see the groups are certainly not pure. Nate smith seems to concentrate in the upper right, but is also an outlier in the blue cluster. The overlap between the middle clusters is also very large, which doesn't really signify great discriminative ability.
+
+### But whats in the six groups, exactly?
+
 ```{r}
 results <- res.km[1]$cluster
 
@@ -1674,75 +1590,40 @@ library(reshape2)
 test <- melt(test)  #the function melt reshapes it from wide to long
 test$rowid <- 1:6
 
+
+```
+
+
+```{r}
+
 ggplot(test, aes(variable, value, fill = variable)) +
   geom_col() +
   facet_wrap(~ rowid) + 
   scale_colour_hue("clarity") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
-
+theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#FCF6F5FF"), legend.background = element_rect(fill="#9bbede"),
+        strip.background = element_blank()) +
+  labs(y="", x="", title="Artists per cluster")
 ```
 
 ***
 
-Here we try clustering in the 6 categories we defined at the beginning of this portfolio. As you can see the groups are certainly not pure. Nate smith seems to concentrate in the upper right, but is also in the lower clusters. I will analyse the exact classifications more precisely in the final portfolio.
-.
+If we look more closely at the clusters we can see that the clusters are quite good at distinguishing certain things.
 
-.
+If we look at cluster one we see a combination of Vulfpeck, official members Theo Katzman and Cory Wong, and guest artists Cory Wong and Nate Smith. It seems that this group captures the essence of average Vulfpeck Music.
 
-.
+Cluster two is a combination of Vulfpeck, Cory Wong and Fearless Flyers. Bassist Joe Dart and Guitarist Cory Wong both play in these bands. Perhaps this cluster captured that feature.
 
-.
+The Fearless flyers and Nate Smith are clearly the biggeset groups in cluster three. Nate Smith is the drummer on both of these and has a distinctive fusion funk style.
 
-.
+Cluster four is harder to pinpoint. It may just be based largely on Cory Wong's solo repertoire, and have difficulty distinguishing between that and Vulfpeck. 
 
-.
+Cluster five is also not very descriptive. The function used recommended using two clusters, clearly the groups defined by main artist is not the most distinctive.
 
-.
-
-.
-
-.
-
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-
-.
-
-.
-
-.
-
-.
-
-.
+Cluster six looks a lot like cluster 1, but the fact that Nate Smith is not included is telling. He joined later than the other members, and the relatively large proportions for Theo and Woody show clearly their style is closer to Vulfpeck's combined style, which is to be expected as founding members.
 
 
 ### Principal Components
@@ -1753,7 +1634,13 @@ pca <- PCA(cluster_juice, ncp=6, scale.unit = TRUE, graph=FALSE)
 #get_eigenvalue(pca)
 #fviz_eig(pca, addlabels=TRUE)
 #pcavar <- get_pca_var(pca)
-fviz_pca_var(pca, col.var="cos2", alpha.var="contrib", gradient.cols = c("blue", "green", "red"), repel = TRUE)
+fviz_pca_var(pca, col.var="cos2", alpha.var="contrib", gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), repel = TRUE) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#FCF6F5FF"), legend.background = element_rect(fill="#9bbede"),
+        strip.background = element_blank()) 
 ```
 
 ***
@@ -1765,25 +1652,35 @@ In the previous slide we were shown the 6 clusters our random forest came up wit
 
 .
 
-.
+Conclusion
+=========================================================================
 
-.
+```{r, echo=FALSE}
+# Define variable containing url
+url <- "https://media.ticketmaster.com/tm/en-us/dam/a/b1f/f8c61ced-7670-4495-8a8f-15b66cf9db1f_247161_CUSTOM.jpg"
+```
+<center><img src="`r url`"></center>
 
-.
+::: {.center data-latex=""}
+To say that this was the limit of what is possible in musical analysis would be plainly false. In this short portfolio I have tried to show through many ways and interpretations what it is that makes Vulfpeck and the surrounding artists special.
 
-.
+o
 
-.
+Overall, we've confirmed the stereotype that Vulfpeck is minimalist, a bit slower, a bit lower energy than the rest of them. Also Theo Katzman's title as sappy love song writer can only be confirmed when compared to the others. Cory Wong's enthusiastic music turned out to be using the most minor chords, this is likely because of the harmonious string and brass sections he features aswell.
 
-.
+o
+
+One thing that surprised me was how much Spotifys track-level featured contributed towards the clustering and predictive algorithms. We built a random forest model that performed consistently, going down in accuracy mainly for underrepresented groups.
+
+o
+
+To anyone reading this, I Highly recommend checking out all of the artists mentioned in this portfolio. There is an amazing live show in Madison Square Garden that singlehandedly helped me through some tough lockdown moments, it's good music and good laughs. 
 
 
-.
+o
 
-.
+Thanks for reading!
 
-.
+v
 
-.
-
-.
+:::
