@@ -1638,13 +1638,13 @@ fviz_pca_var(pca, col.var="cos2", alpha.var="contrib", gradient.cols = c("#00AFB
   theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1),
         axis.text.y=element_blank(),
         axis.ticks.y=element_blank(),
-        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#FCF6F5FF"), legend.background = element_rect(fill="#9bbede"),
-        strip.background = element_blank()) 
+        plot.background = element_rect(fill = "#9bbede", color="#9bbede"), panel.background = element_rect(fill = "#FCF6F5FF"), legend.background = element_rect(fill="#9bbede"),
+        strip.background = element_blank())  + 
 ```
 
 ***
 
-In the previous slide we were shown the 6 clusters our random forest came up with. This is represented in our graph along two dimensions. In machine learning Principal Component Analysis is used to determine a linear combination of the features in our dataset that offer the highest rate of variability. In this circle we see the same two dimensions, but now plotted on top is the contribution of each of our features, the ones we know how to interpret. We can see that acousticness and energy are the biggest contributours for dimension 1, while c01 plays the largest role in dimension 2. It is through this combination of features that you can really start to distinguish groups. 
+In the previous slide we were shown the 6 clusters our random forest came up with. This is represented in our graph along two dimensions. In machine learning Principal Component Analysis is used to determine a linear combination of the features in our dataset that offer the highest rate of variability. In this circle we see the same two dimensions, but now plotted on top is the contribution of each of our features, the ones we know how to interpret. We can see that acousticness, energy and timbre component c02 are the biggest contributours for dimension 1, while instrumentalness and c01 play the largest role in dimension 2. It is through this combination of features that you can really start to distinguish groups. 
 .
 
 .
