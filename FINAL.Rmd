@@ -33,6 +33,9 @@ library(grid)
 library(ggplot2)
 library(lattice)
 library(compmus)
+library(tidymodels)
+library(ggdendro)
+library(heatmaply)
 
 ```
 
@@ -320,8 +323,9 @@ mood <- mood + annotate(
 )
 mood +
     theme_classic() +
-  theme(axis.text.y=element_blank(), axis.text.x=element_blank()) +
-  labs(title="Valence vs Energy", x ="", y="")
+  theme(axis.text.y=element_blank(), axis.text.x=element_blank(), plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#FCF6F5FF"), legend.background = element_rect(fill="#9bbede")) +
+  labs(title="Valence vs Energy", x ="", y="") +
+  guides(size=FALSE)
 ```
 
 ***
@@ -338,7 +342,7 @@ Nate Smith is the only one who shows a clear pattern of low valence and high ene
 
 ### Major and Minor modes are often associated with happy and sad, perhaps that is the explanation?
 
-```{r, fig.width = 12, fig.height=12}
+```{r, fig.width = 12, fig.height=8}
 advanced <- artists %>%                    # Start with awards.
   mutate(
     mode = ifelse(mode == 0, "Minor", "Major")
@@ -365,14 +369,25 @@ advanced <- artists %>%                    # Start with awards.
   )
 kop <-advanced+
   theme_classic() +
-  theme(legend.position = "none", axis.title.y=element_blank(),
+  theme(legend.position = "none",
         axis.text.y=element_blank(),
-        axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
-  labs(x ="Tempo", y="")
+        axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1),
+        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#FCF6F5FF"), legend.background = element_rect(fill="#9bbede"),
+        strip.background = element_blank()) +
+  labs(x ="Tempo", y="Loudness")
 
 
 kop
 
+```
+
+***
+
+Tempo and Loundess seem to have little correlation. We can however see that for most artists songs that are high in both tempo and loudness have a higher chance of being in a major key.
+
+### Combining Mode with Key
+
+```{r}
 artists %>%
   ggplot(                     # Set up the plot.
     aes(
@@ -384,12 +399,15 @@ artists %>%
   facet_wrap(~category) +
   geom_bar() +
   theme_classic() +
-  theme(axis.title.y=element_blank(),
-        axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
+  theme(legend.position = "none",
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1),
+        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#FCF6F5FF"), legend.background = element_rect(fill="#9bbede"),
+        strip.background = element_blank()) +
   labs(x ="", y="") +
   labs(
     x = "Key",
-    y = "Amount of tracks",
+    y = "",
     title = "Key and Mode",
     fill = "Mode"
   ) + 
@@ -417,8 +435,15 @@ Tempo {.storyboard}
 ```{r}
 
 hist1 <- ggplot(data = artists, mapping = aes(x = tempo)) + 
-  geom_histogram(aes(fill = category)) +
-  theme_light() +
+  geom_density(aes(fill = category), position="stack", adjust=1/10) +
+  geom_vline(xintercept=106, color="red", lwd=1) +
+  geom_text(aes(x=c(120), y=c(0.2), label="106bpm", text="106 BPM")) +
+  theme_classic() +
+  theme(
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1),
+        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#FCF6F5FF"), legend.background = element_rect(fill="#9bbede"),
+        strip.background = element_blank()) +
   ggtitle("Tempos") +
   theme(legend.position="none")
 
@@ -427,30 +452,11 @@ hist1
 
 ***
 
-.
+We see the mode tempo for this dataset is 106 BPM. Compared to popular music, whose average tempo has risen up to 120 BPM in recent years, this is on the slower side.
 
-.
+There are also smaller peaks around 70, 90, 130, 155 and 170 BPM. 
 
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
+We can see that the graph is slightly left skewed which indicates that lower tempos are more constant, while higher tempos are more variable.
 .
 
 .
@@ -474,7 +480,12 @@ hist3 <- ggplot(data = artists, mapping = aes(x = tempo, y = category, fill = ca
 #  geom_boxplot(width=0.1, color="white") +
   stat_summary(fun.x=median, geom="point", size=2, color="red") +
   scale_x_continuous() +
-  theme_light() +
+  theme_classic() +
+  theme(
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1),
+        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#FCF6F5FF"), legend.background = element_rect(fill="#9bbede"),
+        strip.background = element_blank()) +
   ggtitle("Tempo")
 
 hist3
@@ -482,39 +493,11 @@ hist3
 
 ***
 
+We can start to see Tempo might be a pretty good predictor in certain cases. Nate Smiths Music has a clear peak around 90 BPM. The Fearless Flyers also havea high tempo as their mode, around 130 BPM, which corresponds to my expectation mentioned earlier. This also explains the peak in the earlier graph.
+
+Although there seem to be clear areasfor each plot, we can see the means are very close together. This is likely caused due to the outliers you can see in almost every group except for the Fearless Flyers.
 .
 
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
-
-.
 
 .
 
@@ -525,10 +508,12 @@ hist3
 .
 
 
-What about song structure?  {.storyboard}
+
+
+Song Structure  {.storyboard}
 =======================================================================
 
-### 1612
+### Vulfpeck - 1612
 
 ```{r, fig.width = 12, fig.height=6}
 
@@ -570,9 +555,12 @@ l <- toohot1 %>%
   coord_fixed() +
   scale_fill_viridis_c(option = 'A', guide = "none") +
   theme_classic() +
-  theme(axis.title.y=element_blank(),
-        axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
-  labs(x ="", y="")
+  theme(
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1),
+        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#9bbede"), legend.background = element_rect(fill="#9bbede"),
+        strip.background = element_blank()) +
+  labs(x ="", y="", title="Timbre")
 
 r <- toohot1 %>%
   compmus_self_similarity(pitches, "manhattan") %>% 
@@ -589,15 +577,38 @@ r <- toohot1 %>%
   coord_fixed() +
   scale_fill_viridis_c(option = 'A', guide = "none") +
   theme_classic() +
-  theme(axis.title.y=element_blank(),
-        axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1)) +
-  labs(x ="", y="")
-grid.arrange(l,r, ncol=2)
+  theme(
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1),
+        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#9bbede"), legend.background = element_rect(fill="#9bbede"),
+        strip.background = element_blank()) +
+  labs(x ="", y="", title="Pitch")
+lol <- grid.arrange(l,r, ncol=2)
+
+# final touch
+cowplot::ggdraw(lol) + 
+  theme(plot.background = element_rect(fill="#9bbede", color = "#9bbede"))
 ```
 
 ***
 
-When analyzing the structure of the self similarity matrix for timbre(left) and pitch(right) there are some clear structures. The song has a clear pre-chorus and chorus. What is interesting is that the most prominent yellow pitch lines are only for the prechorus, meaning the chorus and verse are very similar in pitch. The main melody is provided by the bass, and indeed the bass part is the same for the chorus and verses, and different for the prechorus.
+0-20 seconds
+
+The song opens with a bass melody that continous throughout the song.
+
+100-110 seconds
+
+A vocal solo
+
+140-140 seconds
+
+Vocal fills
+
+In the timbre-based self similarity matrix on the left we see a bright glow indicating that, overall, the timbre of the song is not very constant This is quite a surprise, the song features a bass and keyboard that can be heard throughout the song. Perhaps the combination of instruments and vocals create sounds that the analysis simply couldn't keep apart
+
+The pitch-based self similarity matrix tells the opposite story. It is dark throughout, indicating a steady pitch, except for two key moments, which are caused by the vocal breaks. The vocals on this track are highly improvised which explains the clear difference with the repetitive melodies of the other instruments.
+
+It's interesting to see that the vocals have such a high influence on the overall structure of the song
 
 .
 
@@ -629,7 +640,7 @@ When analyzing the structure of the self similarity matrix for timbre(left) and 
 .
 
 
-### Here we see the Self Similarity Matrix for "Too hot in LA"
+### The Fearless Flyers - Introducing The Fearless Flyers
 
 ```{r, fig.width = 12, fig.height=6}
 
@@ -671,7 +682,12 @@ l <- toohot1 %>%
   coord_fixed() +
   scale_fill_viridis_c(option = 'A', guide = "none") +
   theme_classic() +
-  labs(x = "", y = "")
+  theme(
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1),
+        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#9bbede"), legend.background = element_rect(fill="#9bbede"),
+        strip.background = element_blank()) +
+  labs(x = "", y = "",title="Timbre")
 
 r <- toohot1 %>%
   compmus_self_similarity(pitches, "manhattan") %>% 
@@ -688,14 +704,40 @@ r <- toohot1 %>%
   coord_fixed() +
   scale_fill_viridis_c(option = 'A', guide = "none") +
   theme_classic() +
-  labs(x = "", y = "")
-grid.arrange(l,r, ncol=2)
+  theme(
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1),
+        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#9bbede"), legend.background = element_rect(fill="#9bbede"),
+        strip.background = element_blank()) +
+  labs(x = "", y = "",title="Pitch")
+lol <- grid.arrange(l,r, ncol=2)
+
+# final touch
+cowplot::ggdraw(lol) + 
+  theme(plot.background = element_rect(fill="#9bbede", color = "#9bbede"))
 ```
 
 ***
 
-When analyzing the structure of the self similarity matrix for timbre(left) and pitch(right) there are some clear structures. The song has a clear pre-chorus and chorus. What is interesting is that the most prominent yellow pitch lines are only for the prechorus, meaning the chorus and verse are very similar in pitch. The main melody is provided by the bass, and indeed the bass part is the same for the chorus and verses, and different for the prechorus.
+0-40 seconds
+Main theme
 
+Drum fill
+
+50-70 seconds
+Main theme again
+
+Drum fill
+
+80-110 seconds
+Extended build up
+
+120-140 seconds
+Drum solo
+
+The song here is clearly divided in 4 parts. The first two parts are very similar, which is also what you hear. The playing style is the same and this is reflected in the dark squares. Each part is divided by a drum fill which differs from the rest of the song. It features three string instruments at the same time. The final part of the song is a drum solo, it has little similarity with the rest of the track.
+
+As for the melody, the same pattern is visible, but in a much more exagarated manner. The largest bright lines occur when there string section goes from fast strumming to a melodic build up with longer notes. The drums seem to have a high influence in the pitch similarity still as even the final part has a high similarity with the rest, even though it features little strings.
 .
 
 .
@@ -726,7 +768,7 @@ When analyzing the structure of the self similarity matrix for timbre(left) and 
 .
 
 
-### Nate SMith"
+### Nate Smith- Big/Little Five
 
 ```{r, fig.width = 12, fig.height=6}
 
@@ -768,7 +810,12 @@ l <- toohot1 %>%
   coord_fixed() +
   scale_fill_viridis_c(option = 'A', guide = "none") +
   theme_classic() +
-  labs(x = "", y = "")
+  theme(
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1),
+        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#9bbede"), legend.background = element_rect(fill="#9bbede"),
+        strip.background = element_blank()) +
+  labs(x = "", y = "", title="Timbre")
 
 r <- toohot1 %>%
   compmus_self_similarity(pitches, "manhattan") %>% 
@@ -785,13 +832,33 @@ r <- toohot1 %>%
   coord_fixed() +
   scale_fill_viridis_c(option = 'A', guide = "none") +
   theme_classic() +
-  labs(x = "", y = "")
-grid.arrange(l,r, ncol=2)
+  theme(
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1),
+        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#9bbede"), legend.background = element_rect(fill="#9bbede"),
+        strip.background = element_blank()) +
+  labs(x = "", y = "",title="Pitch")
+lol <- grid.arrange(l,r, ncol=2)
+
+# final touch
+cowplot::ggdraw(lol) + 
+  theme(plot.background = element_rect(fill="#9bbede", color = "#9bbede"))
 ```
 
 ***
 
-When analyzing the structure of the self similarity matrix for timbre(left) and pitch(right) there are some clear structures. The song has a clear pre-chorus and chorus. What is interesting is that the most prominent yellow pitch lines are only for the prechorus, meaning the chorus and verse are very similar in pitch. The main melody is provided by the bass, and indeed the bass part is the same for the chorus and verses, and different for the prechorus.
+0-120 seconds
+Hi Hat grooves
+
+120-150 seconds
+Ride Grooves
+
+150-190 seconds
+Back to Hi Hat
+  
+Here we can really see the power of timbre analysis. Drums are a limited instrument in melodic terms, but the difference between different drums is something everyone can hear and in this case an amazing pattern occurs. The small lines are caused by hits on the crash cymbal, which is often used on the first count of a 4 or 8 bar groove. The clear dark squares are caused by the different cymbals used for the eigth notes played in the groove. The distinction between the smaller HiHat and the larger Ride creates a difference in pitch that is clearly picked up by the chromatic analysis.
+
+As you might expect, the pitches don't really say that much. He simply plays the drums for a solid three and a half minutes, so the only variation is between the different drums, but no clear pattern occurs there. Again the biggest brightness is due to the lack of cymbals and can be seen in the opening 10 seconds.
 
 .
 
@@ -823,7 +890,7 @@ When analyzing the structure of the self similarity matrix for timbre(left) and 
 .
 
 
-### Cory Wong
+### Cory Wong - Golden
 
 ```{r, fig.width = 12, fig.height=6}
 
@@ -865,7 +932,12 @@ l <- toohot1 %>%
   coord_fixed() +
   scale_fill_viridis_c(option = 'A', guide = "none") +
   theme_classic() +
-  labs(x = "", y = "")
+  theme(
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1),
+        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#9bbede"), legend.background = element_rect(fill="#9bbede"),
+        strip.background = element_blank()) +
+  labs(x = "", y = "", title="Timbre")
 
 r <- toohot1 %>%
   compmus_self_similarity(pitches, "manhattan") %>% 
@@ -882,13 +954,37 @@ r <- toohot1 %>%
   coord_fixed() +
   scale_fill_viridis_c(option = 'A', guide = "none") +
   theme_classic() +
-  labs(x = "", y = "")
-grid.arrange(l,r, ncol=2)
+  theme(
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1),
+        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#9bbede"), legend.background = element_rect(fill="#9bbede"),
+        strip.background = element_blank()) +
+  labs(x = "", y = "", title="Pitch")
+lol <- grid.arrange(l,r, ncol=2)
+
+# final touch
+cowplot::ggdraw(lol) + 
+  theme(plot.background = element_rect(fill="#9bbede", color = "#9bbede"))
 ```
 
 ***
 
-When analyzing the structure of the self similarity matrix for timbre(left) and pitch(right) there are some clear structures. The song has a clear pre-chorus and chorus. What is interesting is that the most prominent yellow pitch lines are only for the prechorus, meaning the chorus and verse are very similar in pitch. The main melody is provided by the bass, and indeed the bass part is the same for the chorus and verses, and different for the prechorus.
+0-60 seconds
+Verse and Chorus
+
+60-120 seconds
+Verse and Chorus
+
+120-180 seconds
+Verse and Chorus
+
+180-240 seconds
+Verse and Chorus
+
+
+The timbre analysis does not show a very clear structure. The third repetition features a more pronounced brass section, while the guitar takes a little break.
+
+The most striking pattern is in the pitch features. The Bright lines are caused by breaks at the end of the chorus, going back into the verse. Here you can see this pattern of verse and chorus is repeated 4 times with similar sounds.
 
 .
 
@@ -920,7 +1016,7 @@ When analyzing the structure of the self similarity matrix for timbre(left) and 
 .
 
 
-### HTheo
+### Theo Katzman - Love Is A Beautiful Thing    
 
 ```{r, fig.width = 12, fig.height=6}
 
@@ -962,7 +1058,12 @@ l <- toohot1 %>%
   coord_fixed() +
   scale_fill_viridis_c(option = 'A', guide = "none") +
   theme_classic() +
-  labs(x = "", y = "")
+  theme(
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1),
+        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#9bbede"), legend.background = element_rect(fill="#9bbede"),
+        strip.background = element_blank()) +
+  labs(x = "", y = "", title="Timbre")
 
 r <- toohot1 %>%
   compmus_self_similarity(pitches, "manhattan") %>% 
@@ -979,13 +1080,27 @@ r <- toohot1 %>%
   coord_fixed() +
   scale_fill_viridis_c(option = 'A', guide = "none") +
   theme_classic() +
-  labs(x = "", y = "")
-grid.arrange(l,r, ncol=2)
+  theme(
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1),
+        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#9bbede"), legend.background = element_rect(fill="#9bbede"),
+        strip.background = element_blank()) +
+  labs(x = "", y = "", title="Pitch")
+lol <- grid.arrange(l,r, ncol=2)
+
+# final touch
+cowplot::ggdraw(lol) + 
+  theme(plot.background = element_rect(fill="#9bbede", color = "#9bbede"))
 ```
 
 ***
 
-When analyzing the structure of the self similarity matrix for timbre(left) and pitch(right) there are some clear structures. The song has a clear pre-chorus and chorus. What is interesting is that the most prominent yellow pitch lines are only for the prechorus, meaning the chorus and verse are very similar in pitch. The main melody is provided by the bass, and indeed the bass part is the same for the chorus and verses, and different for the prechorus.
+0-200 seconds
+Soothing and rythmic guitar progression with a repeating vocal theme
+
+The timbre feature seems to show very little similarity throughout the song, however, this is likely caused by the fact that the song is actually extremely similar. 
+
+The pitch analysis confirms the repetition I claimed above. The guitar progrression is a 4 bar loop, and the vocal melody on top of it starts each repetition with the same theme: "Love is a beautiful thing". This exact repetition causes the diagonal lines in the graph
 
 .
 
@@ -1017,7 +1132,7 @@ When analyzing the structure of the self similarity matrix for timbre(left) and 
 .
 
 
-### Woody
+### Woody Goss - Be There
 
 ```{r, fig.width = 12, fig.height=6}
 
@@ -1058,8 +1173,13 @@ l <- toohot1 %>%
   geom_tile() +
   coord_fixed() +
   scale_fill_viridis_c(option = 'A', guide = "none") +
-  theme_classic() +
-  labs(x = "", y = "")
+theme_classic() +
+  theme(
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1),
+        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#9bbede"), legend.background = element_rect(fill="#9bbede"),
+        strip.background = element_blank()) +
+  labs(x = "", y = "", title="Timbre")
 
 r <- toohot1 %>%
   compmus_self_similarity(pitches, "manhattan") %>% 
@@ -1075,25 +1195,42 @@ r <- toohot1 %>%
   geom_tile() +
   coord_fixed() +
   scale_fill_viridis_c(option = 'A', guide = "none") +
-  theme_classic() +
-  labs(x = "", y = "")
-grid.arrange(l,r, ncol=2)
+theme_classic() +
+  theme(
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(), axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=1),
+        plot.background = element_rect(fill = "#9bbede"), panel.background = element_rect(fill = "#9bbede"), legend.background = element_rect(fill="#9bbede"),
+        strip.background = element_blank()) +
+  labs(x = "", y = "", title="Pitch")
+lol <- grid.arrange(l,r, ncol=2)
+
+# final touch
+cowplot::ggdraw(lol) + 
+  theme(plot.background = element_rect(fill="#9bbede", color = "#9bbede"))
 ```
 
 ***
 
-When analyzing the structure of the self similarity matrix for timbre(left) and pitch(right) there are some clear structures. The song has a clear pre-chorus and chorus. What is interesting is that the most prominent yellow pitch lines are only for the prechorus, meaning the chorus and verse are very similar in pitch. The main melody is provided by the bass, and indeed the bass part is the same for the chorus and verses, and different for the prechorus.
+0-70
+verse-prechorus-chorus
+
+70-140
+verse-prechorus-chorus
+
+
+140-250 seconds
+A sing-along type vocal melody that is repeated
+
+The timbre features again give little insight. The final part features a trumpet, which doesn't occur throughout the rest of the song.
+
+The strange checkerboard pattern that can be seen twice in is caused by the way the melody is built. It is an interplay between a bass on the down-beat and a high guitar chord on the up-beat. The final part is a repetitive vocal melody made to sing along.
 
 Predicting {.storyboard}
 ========================================================================
 
 ### Lets put this to the test, we certainly found some differences, but are they distinctive enough?
 ```{r predicting , results = 'hide'}
-library(tidyverse)
-library(tidymodels)
-library(ggdendro)
-library(spotifyr)
-library(compmus)
+
 
 get_conf_mat <- function(fit) {
   outcome <- .get_tune_outcome_names(fit)
